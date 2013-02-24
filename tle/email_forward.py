@@ -115,10 +115,13 @@ def _email_address(line):
     return groups[0]
 
 def _forwarded_from(headers):
-    # TODO extract user email (maybe first and last name)
+    # TODO first and last name
     from_user = headers.get('From')
+    email = _email_address(from_user)
+    if email is None:
+        return None
     from_user = dict([
-        ('email', from_user),
+        ('email', email),
         ('first_name', 'Friendly'),
         ('last_name', 'Purchaser'),
     ])
@@ -154,7 +157,7 @@ def _forwarding_user(
             msg_to=repr(msg_to),
         )
         log.error(err)
-        return
+        return None
     if subject is not None:
         msg_subject = msg.get('Subject')
         if msg_subject != 'Fwd: ' + subject:
@@ -162,12 +165,12 @@ def _forwarding_user(
                 msg_subject=repr(msg_subject),
             )
             log.error(err)
-            return
+            return None
     text = _forwarded_text(msg)
     if text is None:
         err = 'Did not find forwarding info in message'
         log.error(err)
-        return
+        return None
     headers = _forwarded_headers(box, text)
     headers_to = _headers_to(headers)
     if headers_to.lower() not in to_addrs:
@@ -178,7 +181,7 @@ def _forwarding_user(
             )
         )
         log.error(err)
-        return
+        return None
     if subject is not None:
         headers_subject = headers.get('Subject')
         if headers_subject != subject:
@@ -189,7 +192,7 @@ def _forwarding_user(
                 )
             )
             log.error(err)
-            return
+            return None
     return _forwarded_from(headers)
 
 def create_kajabi_user(
