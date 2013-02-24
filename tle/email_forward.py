@@ -135,9 +135,16 @@ def _headers_to(headers):
     return email
 
 def _unprocessed_emails(box):
-    # TODO get _unprocessed_emails
-    msg = box.fetch('5', '(RFC822)')
-    return [msg]
+    # TODO there has to be a better way to do this
+    def _unseen(line):
+        return line[0].split()
+    msgs = box.search(None, 'UNSEEN')
+    while msgs:
+        msgs = _unseen(msgs)
+        for msg in msgs:
+            msg = box.fetch(msg, '(RFC822)')
+            yield msg
+        msgs = box.search(None, 'UNSEEN')
 
 def _forwarding_user(
         box,
