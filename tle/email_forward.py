@@ -267,6 +267,7 @@ def create_kajabi_user(
             email=email,
         )
     )
+    return True
 
 def new_users(
         username,

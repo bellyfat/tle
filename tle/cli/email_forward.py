@@ -1,6 +1,8 @@
 import argparse
 import requests
 import logging
+import time
+import random
 
 from tle.email_forward import (
     new_users,
@@ -47,7 +49,6 @@ def main():
     session = requests.Session()
     to_addrs = config_list(config, 'email', 'to_addrs')
 
-    log.info('Starting')
     for user in new_users(
             username=config.get('email', 'username'),
             password=config.get('email', 'password'),
@@ -66,4 +67,7 @@ def main():
             first_name=user['first_name'],
             last_name=user['last_name'],
         )
-    log.info('Finished')
+    # TODO delay only if no work found
+    delay = random.randint(55, 65)
+    log.debug('No work, sleeping %d seconds...', delay)
+    time.sleep(delay)
