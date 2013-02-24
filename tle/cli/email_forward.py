@@ -13,6 +13,10 @@ from tle.util.config import (
 
 log = logging.getLogger(__name__)
 
+# Disable annoying "HTTP connection" log lines from the requests module
+requests_log = logging.getLogger("requests")
+requests_log.setLevel(logging.WARNING)
+
 def main():
     parser = argparse.ArgumentParser(
         description='Create Kajabi user from forwarded emails',
