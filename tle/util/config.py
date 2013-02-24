@@ -14,6 +14,15 @@ def config_option(fn, section, option):
     except NoOptionError:
         return None
 
+def config_list(config, section, option):
+    try:
+        list_ = config.get(section, option)
+        list_ = list_.split(',')
+        list_ = [option.strip() for option in list_]
+        return list_
+    except NoOptionError:
+        return None
+
 def config_parser(path):
     path = abs_path(path)
     config = SafeConfigParser()
