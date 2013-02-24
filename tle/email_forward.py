@@ -155,6 +155,11 @@ def _forwarding_user(
 ):
     # TODO Is Message-ID only applicable to GMail?
     msg_id = msg.get('Message-ID', 'Unknown message ID')
+    log.info(
+        'Processing email {msg_id}'.format(
+            msg_id=msg_id,
+        )
+    )
     to_addrs = [addr.lower() for addr in to_addrs]
     msg_to = msg.get('Delivered-To')
     if msg_to is None:
@@ -238,7 +243,7 @@ def create_kajabi_user(
         ('first_name', first_name),
         ('last_name', last_name),
     ])
-    log.debug(
+    log.info(
         'Creating Kajabi account for email {email}'.format(
             email=email,
         )
