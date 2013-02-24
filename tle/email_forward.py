@@ -1,3 +1,4 @@
+import re
 import logging
 import imaplib
 import functools
@@ -94,6 +95,25 @@ def _forwarded_headers(box, text):
     headers = box.email_parser.parsestr(text, headersonly=True)
     return headers
 
+def _email_address(line):
+    match = re.search('(\w+@\w+(?:\.\w+)+)', line)
+    if match is None:
+        log.error(
+            'Did not find an email address in {line}'.format(
+                line=line,
+            )
+        )
+        return None
+    groups = match.groups()
+    if len(groups) > 1:
+        log.error(
+            'Found multiple email addresses in {line}'.format(
+                line=line,
+            )
+        )
+        return None
+    return groups[0]
+
 def _forwarded_from(headers):
     # TODO extract user email (maybe first and last name)
     from_user = headers.get('From')
@@ -104,6 +124,13 @@ def _forwarded_from(headers):
     ])
     return from_user
 
+def _headers_to(headers):
+    to = headers.get('To')
+    email = _email_address(to)
+    if email is None:
+        return to
+    return email
+
 def _unprocessed_emails(box):
     # TODO get _unprocessed_emails
     msg = box.fetch('5', '(RFC822)')
@@ -112,10 +139,11 @@ def _unprocessed_emails(box):
 def _forwarding_user(
         box,
         msg,
-        to_addr,
+        to_addrs,
         fwd_addr,
         subject=None,
 ):
+    to_addrs = [addr.lower() for addr in to_addrs]
     msg_to = msg.get('Delivered-To')
     if msg_to is None:
         err = 'Did not find a Delivered-To address'
@@ -141,8 +169,8 @@ def _forwarding_user(
         log.error(err)
         return
     headers = _forwarded_headers(box, text)
-    headers_to = headers.get('To')
-    if headers_to.lower() != to_addr.lower():
+    headers_to = _headers_to(headers)
+    if headers_to.lower() not in to_addrs:
         err = (
             'Found unexpected To address in forwarding info: '
             '{headers_to}'.format(
@@ -212,7 +240,7 @@ def new_users(
         username,
         password,
         server,
-        to_addr,
+        to_addrs,
         fwd_addr,
         subject,
 ):
@@ -222,7 +250,7 @@ def new_users(
             user = _forwarding_user(
                 box,
                 msg,
-                to_addr,
+                to_addrs,
                 fwd_addr,
                 subject,
             )

@@ -8,6 +8,7 @@ from tle.email_forward import (
 )
 from tle.util.config import (
     config_parser,
+    config_list,
     )
 
 log = logging.getLogger(__name__)
@@ -40,13 +41,14 @@ def main():
         )
     config = config_parser(args.config)
     session = requests.Session()
+    to_addrs = config_list(config, 'email', 'to_addrs')
 
     log.info('Starting')
     for user in new_users(
             username=config.get('email', 'username'),
             password=config.get('email', 'password'),
             server=config.get('email', 'server'),
-            to_addr=config.get('email', 'to_addr'),
+            to_addrs=to_addrs,
             fwd_addr=config.get('email', 'fwd_addr'),
             subject=None,
     ):
