@@ -123,7 +123,7 @@ def _forwarded_from(headers):
     from_user = dict([
         ('email', email),
         ('first_name', 'Friendly'),
-        ('last_name', 'Purchaser'),
+        ('last_name', 'Human'),
     ])
     return from_user
 
