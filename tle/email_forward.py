@@ -153,6 +153,8 @@ def _forwarding_user(
         fwd_addr,
         subject=None,
 ):
+    # TODO Is Message-ID only applicable to GMail?
+    msg_id = msg.get('Message-ID', 'Unknown message ID')
     to_addrs = [addr.lower() for addr in to_addrs]
     msg_to = msg.get('Delivered-To')
     if msg_to is None:
@@ -160,30 +162,44 @@ def _forwarding_user(
         log.error(err)
         return
     if msg_to.lower() != fwd_addr.lower():
-        err = 'Found unexpected Delivered-To address: {msg_to}'.format(
-            msg_to=repr(msg_to),
+        err = (
+            '{msg_id}: Found unexpected Delivered-To address: '
+            '{msg_to}'.format(
+                msg_id=msg_id,
+                msg_to=repr(msg_to),
+            )
         )
         log.error(err)
         return None
     if subject is not None:
         msg_subject = msg.get('Subject')
         if msg_subject != 'Fwd: ' + subject:
-            err = 'Found unexpected forwarded Subject: {msg_subject}'.format(
-                msg_subject=repr(msg_subject),
+            err = (
+                '{msg_id}: Found unexpected forwarded Subject: '
+                '{msg_subject}'.format(
+                    msg_id=msg_id,
+                    msg_subject=repr(msg_subject),
+                )
             )
             log.error(err)
             return None
     text = _forwarded_text(msg)
     if text is None:
-        err = 'Did not find forwarding info in message'
+        err = (
+            '{msg_id}: Did not find forwarding info in '
+            'message'.format(
+                msg_id=msg_id,
+            )
+        )
         log.error(err)
         return None
     headers = _forwarded_headers(box, text)
     headers_to = _headers_to(headers)
     if headers_to.lower() not in to_addrs:
         err = (
-            'Found unexpected To address in forwarding info: '
+            '{msg_id}: Found unexpected To address in forwarding info: '
             '{headers_to}'.format(
+                msg_id=msg_id,
                 headers_to=repr(headers_to),
             )
         )
@@ -193,8 +209,9 @@ def _forwarding_user(
         headers_subject = headers.get('Subject')
         if headers_subject != subject:
             err = (
-                'Found unexpected Subject in forwarding info: '
+                '{msg_id}: Found unexpected Subject in forwarding info: '
                 '{headers_subject}'.format(
+                    msg_id=msg_id,
                     headers_subject=repr(headers_subject),
                 )
             )
