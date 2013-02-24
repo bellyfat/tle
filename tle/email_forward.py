@@ -114,7 +114,7 @@ def _forwarding_user(
         msg,
         to_addr,
         fwd_addr,
-        subject,
+        subject=None,
 ):
     msg_to = msg.get('Delivered-To')
     if msg_to is None:
@@ -127,13 +127,14 @@ def _forwarding_user(
         )
         log.error(err)
         return
-    msg_subject = msg.get('Subject')
-    if msg_subject != 'Fwd: ' + subject:
-        err = 'Found unexpected forwarded Subject: {msg_subject}'.format(
-            msg_subject=repr(msg_subject),
-        )
-        log.error(err)
-        return
+    if subject is not None:
+        msg_subject = msg.get('Subject')
+        if msg_subject != 'Fwd: ' + subject:
+            err = 'Found unexpected forwarded Subject: {msg_subject}'.format(
+                msg_subject=repr(msg_subject),
+            )
+            log.error(err)
+            return
     text = _forwarded_text(msg)
     if text is None:
         err = 'Did not find forwarding info in message'
@@ -150,16 +151,17 @@ def _forwarding_user(
         )
         log.error(err)
         return
-    headers_subject = headers.get('Subject')
-    if headers_subject != subject:
-        err = (
-            'Found unexpected Subject in forwarding info: '
-            '{headers_subject}'.format(
-                headers_subject=repr(headers_subject),
+    if subject is not None:
+        headers_subject = headers.get('Subject')
+        if headers_subject != subject:
+            err = (
+                'Found unexpected Subject in forwarding info: '
+                '{headers_subject}'.format(
+                    headers_subject=repr(headers_subject),
+                )
             )
-        )
-        log.error(err)
-        return
+            log.error(err)
+            return
     return _forwarded_from(headers)
 
 def create_kajabi_user(
@@ -224,4 +226,5 @@ def new_users(
                 fwd_addr,
                 subject,
             )
-            yield user
+            if user:
+                yield user

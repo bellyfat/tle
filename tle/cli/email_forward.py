@@ -48,7 +48,7 @@ def main():
             server=config.get('email', 'server'),
             to_addr=config.get('email', 'to_addr'),
             fwd_addr=config.get('email', 'fwd_addr'),
-            subject=config.get('email', 'subject'),
+            subject=None,
     ):
         create_kajabi_user(
             session=session,
