@@ -78,16 +78,43 @@ def mailbox(
             # TODO can we check if we're logged in instead?
             pass
 
+def _forwarded_data(data, begin):
+    # TODO there definitely has to be a better way to do this
+    text = None
+    count = 0
+    for (i,line) in enumerate(data):
+        if begin == line:
+            text = []
+            for datum in data[i+1:]:
+                if count == 4:
+                    break
+                if not datum.strip():
+                    continue
+                if datum.startswith('>'):
+                    # Also remove extra space
+                    datum = datum[2:]
+                text.append(datum)
+                count += 1
+            return text
+    return text
+
 def _forwarded_text(msg):
+    # TODO there's probably a better way to detect forwarded messages
     data = msg.get_payload()
     if msg.is_multipart():
         data = data[0].get_payload()
     data = data.split('\r\n')
-    text = None
-    for (i,line) in enumerate(data):
-        if '---------- Forwarded message ----------' == line:
-            text = data[i+1:i+5]
-            break
+    # Gmail
+    text = _forwarded_data(
+        data,
+        '---------- Forwarded message ----------',
+    )
+    if text is None:
+        # iPhone
+        text = _forwarded_data(
+            data,
+            'Begin forwarded message:',
+        )
     return text
 
 def _forwarded_headers(box, text):
