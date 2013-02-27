@@ -1,10 +1,10 @@
-import re
 import logging
 import imaplib
 import functools
 
 from contextlib import contextmanager
 from email import parser as email_parser
+from email.utils import parseaddr as address_parser
 
 log = logging.getLogger(__name__)
 
@@ -125,28 +125,20 @@ def _forwarded_headers(box, text):
     return headers
 
 def _email_address(line):
-    match = re.search('(\w+@\w+(?:\.\w+)+)', line)
-    if match is None:
+    (name, email) = address_parser(line)
+    if not email:
         log.error(
             'Did not find an email address in {line}'.format(
                 line=line,
             )
         )
         return None
-    groups = match.groups()
-    if len(groups) > 1:
-        log.error(
-            'Found multiple email addresses in {line}'.format(
-                line=line,
-            )
-        )
-        return None
-    return groups[0]
+    return (name, email)
 
 def _forwarded_from(headers):
     # TODO first and last name
     from_user = headers.get('From')
-    email = _email_address(from_user)
+    (name, email) = _email_address(from_user)
     if email is None:
         return None
     from_user = dict([
@@ -158,7 +150,7 @@ def _forwarded_from(headers):
 
 def _headers_to(headers):
     to = headers.get('To')
-    email = _email_address(to)
+    (name, email) = _email_address(to)
     if email is None:
         return to
     return email
