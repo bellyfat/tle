@@ -100,9 +100,11 @@ def _forwarded_data(data, begin):
 
 def _forwarded_text(msg):
     # TODO there's probably a better way to detect forwarded messages
-    data = msg.get_payload()
     if msg.is_multipart():
-        data = data[0].get_payload()
+        data = msg.get_payload()
+        data = data[0].get_payload(decode=True)
+    else:
+        data = msg.get_payload(decode=True)
     data = data.split('\r\n')
     # Gmail
     text = _forwarded_data(
