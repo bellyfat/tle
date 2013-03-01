@@ -80,23 +80,25 @@ def mailbox(
 
 def _forwarded_data(data, begin):
     # TODO there definitely has to be a better way to do this
-    text = None
-    count = 0
+    headers = ['from', 'date', 'subject', 'to']
+    text = []
     for (i,line) in enumerate(data):
         if begin == line:
-            text = []
             for datum in data[i+1:]:
-                if count == 4:
-                    break
+                if not headers:
+                    return text
                 if not datum.strip():
                     continue
                 if datum.startswith('>'):
                     # Also remove extra space
                     datum = datum[2:]
-                text.append(datum)
-                count += 1
-            return text
-    return text
+                lower = datum.lower()
+                for header in headers:
+                    if lower.startswith(header):
+                        text.append(datum)
+                        headers.remove(header)
+                        break
+                    text[-1] = text[-1] + ' ' + datum
 
 def _forwarded_text(msg):
     # TODO there's probably a better way to detect forwarded messages
